@@ -1,0 +1,22 @@
+# Local secrets: the example is intentionally public.
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+
+# Tooling, build products and private local storage.
+node_modules/
+.npm-cache/
+.wrangler/
+dist/
+.check-output/
+.test-build-*/
+coverage/
+.generated/
+data/
+docs/collection-report-*.json
+*.log
+.DS_Store

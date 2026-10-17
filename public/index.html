@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="서울 25개 자치구의 동·주택유형별 평균 전세 보증금과 거래 건수를 확인하세요.">
+  <title>서울 전세 한눈에 | Seoul Rent</title>
+  <link rel="preload" href="/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+  <link id="plotly.js-style-global" class="no-inline-styles" rel="stylesheet" href="/plotly.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/analysis.css">
+  <link rel="stylesheet" href="/regions.css">
+  <link rel="stylesheet" href="/leaflet.css">
+  <link rel="stylesheet" href="/map.css">
+  <script defer src="/plotly.min.js"></script>
+  <script defer src="/leaflet.js"></script>
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/" aria-label="서울 전세 한눈에 홈"><span class="brand-mark" aria-hidden="true">S</span> SEOUL RENT<span class="brand-dot" aria-hidden="true">.</span></a><nav class="top-nav" aria-label="주요 화면"><a href="#map-title">전세 지도</a><a href="#results-title">거래 분석</a><span class="top-note">서울 25개 자치구</span></nav></header>
+  <main class="shell">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">SEOUL JEONSE EXPLORER</p>
+      <h1 id="page-title">서울 전세, <span>한눈에.</span></h1>
+      <p class="lead">지도로 지역의 차이를 살펴보고, 궁금한 두 동네를 비교해 보세요.</p>
+      <p id="period" class="period">조회 기간을 확인하고 있습니다.</p>
+    </section>
+    <section class="panel filter-panel" aria-labelledby="filter-title">
+      <div class="section-heading"><h2 id="filter-title">어느 동네가 궁금하세요?</h2><span class="tag">전세 거래만</span></div>
+      <form id="filters" class="region-filters">
+        <div class="region-pickers">
+          <fieldset class="region-picker"><legend><span class="region-badge">A</span> 조회할 지역</legend><div class="region-fields">
+            <label for="district">자치구<select id="district" name="gu" disabled><option value="">불러오는 중</option></select></label>
+            <label for="dong">동 <span class="label-note">법정동</span><select id="dong" name="dong" disabled><option value="all">전체 동</option></select></label>
+          </div></fieldset>
+          <fieldset id="region-b-fields" class="region-picker secondary" hidden><legend><span class="region-badge">B</span> 비교할 지역</legend><div class="region-fields">
+            <label for="district-b">자치구<select id="district-b" name="guB" aria-label="비교 지역 자치구" disabled><option value="">불러오는 중</option></select></label>
+            <label for="dong-b">동 <span class="label-note">법정동</span><select id="dong-b" name="dongB" aria-label="비교 지역 동" disabled><option value="all">전체 동</option></select></label>
+          </div></fieldset>
+        </div>
+        <div class="shared-filters">
+          <label for="housing">주택유형 <span class="label-note">두 지역 공통</span><select id="housing" name="type" disabled><option value="all">전체 유형</option></select></label>
+          <label class="compare-toggle"><input id="compare-regions" type="checkbox" disabled> 두 동네 비교하기</label>
+          <button id="submit" type="submit" disabled>조회하기 <span aria-hidden="true">→</span></button>
+        </div>
+        <p class="footnote">서울 전체는 25개 구의 모든 동을 집계합니다. 두 동네 비교를 켜면 자치구와 동을 각각 선택할 수 있습니다.</p>
+      </form>
+    </section>
+    <section class="panel map-panel" id="map-panel" aria-labelledby="map-title" aria-busy="true" hidden>
+      <div class="map-header">
+        <div><div class="section-heading"><h2 id="map-title">서울 전세 지도</h2><span class="tag neutral">25개 자치구</span></div><p id="map-description" class="footnote"></p></div>
+        <div class="map-toolbar"><label for="map-housing"><span>지도 주택유형</span><select id="map-housing"><option value="all">전체 유형</option></select></label><button id="map-reset" class="map-reset" type="button">서울 전체 보기</button></div>
+      </div>
+      <div id="map-status" class="status loading" role="status" aria-live="polite">지도 자료를 준비하고 있습니다.</div>
+      <button id="map-retry" class="retry" type="button" hidden>지도 자료 다시 시도</button>
+      <div id="map-content" hidden>
+        <div class="map-layout">
+          <div class="map-visual">
+            <div id="map-basemap-error" class="map-basemap-error" role="status" hidden>배경지도를 불러오지 못한 부분이 있습니다. 자치구 경계와 전세 요약은 계속 볼 수 있습니다. <button id="map-basemap-retry" type="button">배경지도 다시 시도</button></div>
+            <div id="district-map" class="district-map" role="region" aria-label="서울 자치구별 평균 전세 보증금 지도. 자치구를 클릭하거나 키보드로 선택하면 상세 정보를 볼 수 있습니다."></div>
+            <p class="footnote map-source">경계: 통계청 SGIS · 2025.06.30 기준 <span>© OpenStreetMap contributors · <a href="https://www.openstreetmap.org/fixthemap" rel="noreferrer">지도 오류 제보 ↗</a></span></p>
+          </div>
+          <aside class="map-sidebar" aria-label="지도 범례와 집계 기준">
+            <p class="eyebrow">지도를 읽는 방법</p>
+            <div class="map-legend"><p class="map-legend-title">평균 전세 보증금 <span>만원</span></p><div id="map-legend-scale" class="map-legend-scale" aria-hidden="true"></div><div class="map-legend-values"><span id="map-legend-min"></span><span id="map-legend-mid"></span><span id="map-legend-max"></span></div><p class="map-scale-direction">낮음 <span>높음</span></p><p class="map-no-value">회색: 거래 없음 · 10건 미만 · 자료 없음</p></div>
+            <p id="map-count" class="chart-count"></p>
+            <p class="metric-definition">자치구별 유효 전세 보증금 합계 ÷ 거래 건수</p>
+            <div class="map-scope"><p id="map-selection" class="map-selection"></p><p class="footnote">지도 색은 자치구 전체 동의 평균입니다. 동을 선택하면 해당 자치구의 테두리만 강조합니다.</p></div>
+            <p class="map-hint">자치구를 눌러 평균과 거래 건수를 확인하세요.</p>
+            <details class="map-notes"><summary>색상과 집계 기준</summary><p>선택 유형의 최솟값~최댓값을 노랑 → 주황 → 빨강의 선형 색상으로 표시합니다. 유형마다 기준이 달라지므로 숫자 범례를 함께 확인하세요. 10~29건의 평균은 참고용입니다. 색 차이로 가격 차이의 원인을 판단할 수 없습니다.</p><p>지도 유형은 상단 주택유형과 함께 바뀝니다. 그래프의 ‘주택유형별로 함께 비교’를 켜도 지도는 선택한 한 유형만 표시합니다. 경계는 실습 제공 통계청 SGIS 2025년 2분기 자료를 사용했습니다.</p></details>
+          </aside>
+        </div>
+        <details class="chart-details map-table"><summary>자치구별 수치와 거래 건수 보기</summary><div class="table-wrap"><table><caption class="sr-only">지도에 사용한 주택유형별 평균 전세 보증금과 거래 건수</caption><thead><tr><th scope="col">자치구</th><th scope="col">주택유형</th><th scope="col">평균 보증금 (만원)</th><th scope="col">거래 건수 (건)</th></tr></thead><tbody id="map-rows"></tbody></table></div></details>
+      </div>
+    </section>
+    <section id="results" class="results" aria-labelledby="results-title" aria-busy="true">
+      <div class="section-heading result-heading"><h2 id="results-title">선택한 지역의 전세</h2><span class="unit">보증금 단위: 만원</span></div>
+      <div id="status" class="status loading" role="status" aria-live="polite">조회 화면을 준비하고 있습니다.</div>
+      <button id="retry" type="button" class="retry" hidden>다시 시도</button>
+      <div id="dashboard" hidden>
+        <div id="region-cards" class="region-cards">
+        <section class="region-result"><h3 id="region-a-label" class="region-result-label">선택한 지역</h3><div class="metrics">
+          <article class="metric-card primary"><p>평균 전세 보증금</p><div class="metric-value"><strong id="mean">—</strong><span>만원</span></div><p id="mean-note" class="metric-note">거래당 보증금의 산술평균</p></article>
+          <article class="metric-card"><p>전세 거래 건수</p><div class="metric-value"><strong id="count">—</strong><span>건</span></div><p id="metric-period" class="metric-note"></p></article>
+        </div></section>
+        <section id="region-b-result" class="region-result secondary" hidden><h3 id="region-b-label" class="region-result-label">비교할 지역</h3><div class="metrics">
+          <article class="metric-card primary"><p>평균 전세 보증금</p><div class="metric-value"><strong id="mean-b">—</strong><span>만원</span></div><p id="mean-note-b" class="metric-note"></p></article>
+          <article class="metric-card"><p>전세 거래 건수</p><div class="metric-value"><strong id="count-b">—</strong><span>건</span></div><p id="metric-period-b" class="metric-note"></p></article>
+        </div></section>
+        </div>
+        <p id="pair-note" class="pair-note" hidden></p>
+        <section class="panel comparison" aria-labelledby="comparison-title">
+          <div class="section-heading"><h3 id="comparison-title">연도별로 비교해 볼까요?</h3><span class="tag neutral">동일 기간 비교</span></div>
+          <p id="comparison-period" class="footnote"></p>
+          <div id="year-chart" class="year-chart"></div>
+          <details class="chart-details"><summary>연도별 수치와 거래 건수 보기</summary><div class="table-wrap"><table><caption class="sr-only">선택 지역의 연도별 동일 기간 평균 전세 보증금과 거래 건수</caption><thead><tr id="annual-head"><th scope="col">계약연도</th><th scope="col">평균 보증금 <span>(만원)</span></th><th scope="col">거래 건수 <span>(건)</span></th></tr></thead><tbody id="rows"></tbody></table></div></details>
+          <p class="footnote">10건 미만은 평균을 표시하지 않습니다. 10~29건의 평균은 참고용입니다.</p>
+        </section>
+      </div>
+    </section>
+    <section id="analysis-section" class="analysis-section" aria-labelledby="analysis-title" hidden>
+      <div class="analysis-heading"><div><p class="eyebrow">시간과 지역으로 더 살펴보기</p><h2 id="analysis-title">전세 거래의 흐름과 차이</h2></div><label class="compare-toggle"><input id="compare-types" type="checkbox"> 주택유형별로 함께 비교</label></div>
+      <p class="footnote analysis-guide">위 주택유형 선택은 두 그래프에 적용됩니다. 함께 비교를 켜면 아파트·단독다가구·연립다세대·오피스텔을 나란히 보여줍니다. 범례로 유형을 숨기거나 다시 표시할 수 있으며, 집계 건수와 설명은 숨김 여부와 관계없이 선택한 유형 전체 기준입니다.</p>
+      <div class="housing-key" aria-label="주택유형 색상"><span class="housing-apartment">아파트</span><span class="housing-house">단독다가구</span><span class="housing-villa">연립다세대</span><span class="housing-officetel">오피스텔</span></div>
+      <article class="panel analysis-panel" id="monthly-panel" aria-labelledby="monthly-title" aria-busy="true">
+        <div class="section-heading"><h3 id="monthly-title">월별 평균 전세 보증금 추이</h3><span class="tag neutral">Plotly · 월별</span></div>
+        <p id="monthly-description" class="footnote"></p>
+        <p class="metric-definition">지표: 계약월별 유효 전세 보증금 합계 ÷ 거래 건수 · 단위: 만원</p>
+        <p id="monthly-count" class="chart-count"></p>
+        <div id="monthly-status" class="status loading" role="status" aria-live="polite">월별 자료를 준비하고 있습니다.</div>
+        <button id="monthly-retry" class="retry" type="button" hidden>월별 자료 다시 시도</button>
+        <div id="monthly-content" hidden>
+          <div id="monthly-plot" class="plotly-chart" role="img" aria-label="월별 평균 전세 보증금 추이. 기간과 거래 건수는 아래 상세 표에서도 확인할 수 있습니다."></div>
+          <p class="footnote">10건 미만인 월의 평균은 비워 두고 선을 연결하지 않습니다. 마지막 진행 월은 빈 마름모로 표시하며 전체 월과 비교에 주의하세요. 확대: 드래그 · 원래대로: 두 번 클릭</p>
+          <div class="chart-insight"><h4>데이터에서 확인한 점</h4><ul id="monthly-observations"></ul><p><strong>해석할 때:</strong> 월별 거래의 주택유형·면적·거래 구성 차이가 평균에 반영될 수 있습니다. 같은 주택의 가격 변화를 추적한 값이 아니며 원인은 이 집계만으로 확인할 수 없습니다. 아래 설명은 완결월·30건 이상인 월만 사용합니다.</p></div>
+          <details class="chart-details"><summary>월별 수치와 거래 건수 보기</summary><div class="table-wrap"><table><caption class="sr-only">지역별 월별 평균 전세 보증금과 거래 건수</caption><thead><tr><th scope="col">지역</th><th scope="col">계약월</th><th scope="col">주택유형</th><th scope="col">평균 보증금</th><th scope="col">거래 건수</th></tr></thead><tbody id="monthly-rows"></tbody></table></div></details>
+        </div>
+      </article>
+      <article class="panel analysis-panel" id="district-panel" aria-labelledby="district-title" aria-busy="true">
+        <div class="section-heading"><h3 id="district-title">자치구별 평균 전세 보증금 비교</h3><span class="tag neutral">Plotly · 25개 구</span></div>
+        <p id="district-description" class="footnote"></p>
+        <p class="metric-definition">지표: 자치구별 유효 전세 보증금 합계 ÷ 거래 건수 · 단위: 만원</p>
+        <p class="footnote">서울 25개 자치구의 전체 동을 비교합니다. 위 자치구·동 선택은 이 그래프에 적용되지 않습니다.</p>
+        <p id="district-count" class="chart-count"></p>
+        <div id="district-status" class="status loading" role="status" aria-live="polite">자치구 비교 자료를 준비하고 있습니다.</div>
+        <button id="district-retry" class="retry" type="button" hidden>자치구 자료 다시 시도</button>
+        <div id="district-content" hidden>
+          <div id="district-plot" class="plotly-chart" role="img" aria-label="서울 25개 자치구의 평균 전세 보증금 비교. 거래 건수는 아래 상세 표에서도 확인할 수 있습니다."></div>
+          <p class="footnote">선택 유형의 평균 순으로 배치합니다. 10건 미만의 평균은 표시하지 않으며, 10~29건은 참고용입니다. 막대에 마우스를 올리면 평균과 거래 건수를 확인할 수 있습니다.</p>
+          <div class="chart-insight"><h4>데이터에서 확인한 점</h4><ul id="district-observations"></ul><p><strong>가능한 해석:</strong> 관측된 평균 차이에는 거래된 주택의 면적·유형 등 구성 차이가 반영될 수 있습니다. 같은 주택 조건의 지역 효과나 정책·금리의 인과효과로 해석할 근거는 없습니다. 아래 설명은 30건 이상인 구만 사용합니다.</p></div>
+          <details class="chart-details"><summary>자치구별 수치와 거래 건수 보기</summary><div class="table-wrap"><table><caption class="sr-only">자치구별 평균 전세 보증금과 거래 건수</caption><thead><tr><th scope="col">자치구</th><th scope="col">주택유형</th><th scope="col">평균 보증금</th><th scope="col">거래 건수</th></tr></thead><tbody id="district-rows"></tbody></table></div></details>
+        </div>
+      </article>
+    </section>
+    <details class="method"><summary>이 숫자는 어떻게 계산하나요?</summary><div><p>전세로 구분된 거래 중 계약일·지역·주택유형이 유효하고 보증금이 양수인 거래를 집계합니다. 신규·갱신 계약을 모두 포함합니다.</p><p>상단 평균과 거래 건수는 전체 조회 기간 기준입니다. 연도별 차트는 각 연도의 1월 1일부터 같은 월·일까지 비교합니다. 평균은 선택한 거래의 보증금 합계 ÷ 거래 건수입니다.</p><p>서울열린데이터광장의 API는 최신 3년간의 자료만 접근할 수 있어, 2024~2026년 자료는 API를 사용하고 2022·2023년 자료는 ‘서울시 부동산 전월세가 정보’의 CSV 파일을 가공하였습니다. 신고 지연·정정과 자료 추출 시점에 따라 결과가 달라질 수 있습니다. 주택 면적·건축연도·층의 차이를 보정한 가격지수는 아닙니다.</p></div></details>
+  </main>
+  <footer class="shell"><span>SEOUL RENT · 서울 전세 한눈에</span><a href="https://data.seoul.go.kr/dataList/OA-21276/A/1/datasetView.do" rel="noreferrer">자료 출처: 서울 열린데이터광장 ↗</a></footer>
+</body>
+</html>

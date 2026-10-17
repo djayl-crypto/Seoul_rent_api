@@ -1,0 +1,35 @@
+.analysis-section { margin-top: 34px; }
+.analysis-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.analysis-heading .eyebrow { margin-bottom: 8px; }
+.analysis-heading h2 { font-size: 20px; }
+.compare-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; line-height: 1.7; padding: 10px 13px; border: 1px solid var(--line); border-radius: 8px; background: #f8faff; white-space: nowrap; }
+.compare-toggle input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; cursor: pointer; }
+.compare-toggle:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
+.analysis-guide { max-width: 930px; margin: 14px 0; }
+.housing-key { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0 18px; }
+.housing-key span { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 7px 10px; font-size: 11px; color: #52617b; }
+.housing-key span:before { content: ''; width: 9px; height: 9px; border-radius: 3px; border: 1px solid #19197040; }
+.housing-apartment:before { background: var(--housing-apartment); } .housing-house:before { background: var(--housing-house); }
+.housing-villa:before { background: var(--housing-villa); } .housing-officetel:before { background: var(--housing-officetel); }
+.analysis-panel { margin-top: 20px; }
+.metric-definition { font-size: 11px; line-height: 1.8; color: #68768c; margin: 8px 0; }
+.chart-count { font-size: 11px; font-weight: 650; color: #365c9b; margin: 10px 0; }
+.plotly-chart { width: 100%; min-width: 0; overflow: hidden; }
+.chart-insight { border: 1px solid #e3eaf6; background: #f7f9fd; padding: 17px 20px; margin-top: 20px; border-radius: 10px; }
+.chart-insight h4 { margin: 0 0 9px; font-size: 12px; color: #3c5f96; }
+.chart-insight ul { padding-left: 17px; margin: 0; }
+.chart-insight li,.chart-insight p { font-size: 11px; line-height: 1.9; color: #65748b; }
+.chart-insight li+li { margin-top: 8px; }
+.chart-insight p { border-top: 1px solid #e1e8f3; padding-top: 10px; margin: 12px 0 0; }
+.chart-details { font-size: 11px; color: #68768c; margin-top: 20px; border-top: 1px solid var(--line); padding-top: 15px; line-height: 1.8; }
+.chart-details summary { font-weight: 650; }
+.chart-details .table-wrap { max-height: 400px; overflow: auto; }
+.chart-details th { position: sticky; top: 0; }
+.chart-details td { font-size: 11px; }
+.analysis-panel .status.ready { padding: 0; }
+@media(max-width:700px) {
+  .analysis-heading { align-items: flex-start; flex-direction: column; gap: 14px; } .analysis-heading h2 { font-size: 18px; }
+  .analysis-panel { padding: 20px 12px; } .analysis-panel .section-heading { align-items: flex-start; }
+  .analysis-panel h3 { font-size: 14px; } .chart-insight { padding: 15px 13px; } .chart-details td { padding: 11px 8px; }
+  .housing-key { gap: 6px; } .housing-key span { padding: 6px 8px; }
+}

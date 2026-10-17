@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "seoul-rent-api",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-09-30",
+  "send_metrics": false,
+  // No vars, build substitutions or credentials belong here.
+  // Local emulation needs no Cloudflare account. Provision this private bucket before deployment.
+  "r2_buckets": [
+    { "binding": "RENT_DATA", "bucket_name": "seoul-rent-api-data" }
+  ],
+  "env": {
+    "preview": {
+      "r2_buckets": [
+        { "binding": "RENT_DATA", "bucket_name": "seoul-rent-api-preview-data" }
+      ]
+    }
+  }
+}

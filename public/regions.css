@@ -1,0 +1,36 @@
+.filter-panel { padding: 18px 22px; }
+.filter-panel h2 { font-size: 14px; }
+.region-filters { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); align-items: end; gap: 12px 24px; margin-top: 14px; }
+.region-pickers { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 16px; }
+.region-picker { margin: 0; padding: 0; border: 0; min-width: 0; }
+.region-picker legend { font-size: 11px; font-weight: 650; padding: 0; margin-bottom: 6px; color: var(--region-a); }
+.region-badge { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 5px; background: var(--region-a); color: #fff; margin-right: 5px; font-size: 10px; }
+.secondary .region-badge { background: var(--region-b); }
+.region-picker.secondary legend { color: var(--region-b); }
+.region-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.shared-filters { display: grid; grid-template-columns: minmax(140px,1fr) auto auto; align-items: end; gap: 12px; }
+.shared-filters .compare-toggle { min-height: 44px; font-size: 11px; padding: 8px 10px; }
+.shared-filters button { padding: 0 17px; }
+.region-filters>.footnote { grid-column: 1/-1; margin: 0; font-size: 10px; }
+.region-cards.paired { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.region-result { min-width: 0; }
+.region-result-label { font-size: 12px; margin: 0 0 11px; color: var(--region-a); }
+.secondary .region-result-label { color: var(--region-b); }
+.paired .metrics { gap: 10px; }
+.paired .metric-card { padding: 22px 18px; }
+.paired .metric-value strong { font-size: 29px; }
+.paired .metric-value { min-height: 43px; flex-wrap: wrap; }
+.paired .metric-card.primary { background: #edf3ff; border-color: #d7e4ff; }
+.paired .primary .metric-value strong { color: var(--region-a); }
+.secondary .metric-card.primary { background: #f0f0fa; border-color: #dedff2; }
+.secondary .primary .metric-value strong { color: var(--region-b); }
+.pair-note { font-size: 11px; line-height: 1.9; color: #64748b; background: #eef3fb; border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin: 0 0 22px; }
+#year-chart .js-plotly-plot { width: 100%; }
+@media(max-width:1100px) { .region-filters { grid-template-columns: 1fr; } .region-pickers { grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); } .shared-filters { grid-template-columns: minmax(140px,1fr) auto auto; } }
+@media(max-width:700px) {
+  .filter-panel { padding: 17px; } .region-pickers { grid-template-columns: 1fr; gap: 14px; } .region-filters { margin-top: 14px; gap: 14px; }
+  .region-fields { gap: 12px; } .shared-filters { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .shared-filters>label:first-child { grid-column: 1/-1; } .shared-filters .compare-toggle { min-height: 42px; font-size: 11px; padding: 8px; }
+  .shared-filters button { padding: 0 14px; } .region-filters>.footnote { display: none; }
+  .region-cards.paired { grid-template-columns: 1fr; gap: 0; } .region-result-label { line-height: 1.7; } #year-chart { overflow: hidden; }
+}

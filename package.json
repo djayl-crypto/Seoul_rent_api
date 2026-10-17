@@ -1,0 +1,30 @@
+{
+  "name": "seoul-rent-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:keyless": "node scripts/dev.mjs --keyless",
+    "test": "node --test",
+    "prepare:data": "node scripts/prepare-data.mjs",
+    "prepare:map": "node scripts/prepare-map.mjs",
+    "sync": "node scripts/sync.mjs",
+    "build": "node scripts/build.mjs",
+    "check": "npm run test && npm run build",
+    "check:functions": "node scripts/check-functions.mjs",
+    "check:upload": "node scripts/check-upload.mjs"
+  },
+  "devDependencies": {
+    "proj4": "2.22.0",
+    "shapefile": "0.6.6",
+    "wrangler": "4.140.0"
+  },
+  "dependencies": {
+    "leaflet": "1.9.4",
+    "plotly.js-basic-dist-min": "4.1.2"
+  }
+}

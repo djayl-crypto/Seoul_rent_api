@@ -111,7 +111,9 @@ R2 체크포인트는 조건부 갱신으로 동시 단계의 중복 합산을 �
 
 ## GitHub 업로드와 Cloudflare Pages 배포 준비
 
-**GitHub 저장소는 공개이며 Pages 운영 저장소는 무료 Workers KV를 사용합니다.** 사용자가 R2 구독을 거절했으므로 R2 구독이나 유료 플랜은 추가하지 않았습니다. Pages 프로젝트는 `seoul-rent-api`, 할당된 도메인은 `seoul-rent-api-b4y.pages.dev`입니다. Production의 `SEOUL_API_KEY`는 암호화 Secret으로 등록했습니다. 사용자 동의를 받은 25개 구 집계 50개 객체를 비공개 KV에 업로드했으며, 실제 사이트 배포와 공개 동작 검증을 진행합니다. 검토 결과는 [DEPLOYMENT_REVIEW.md](docs/DEPLOYMENT_REVIEW.md)에 기록합니다.
+**[공개 사이트 열기](https://seoul-rent-api-b4y.pages.dev/) — GitHub 저장소는 공개이며 Pages 운영 저장소는 무료 Workers KV를 사용합니다.** 사용자가 R2 구독을 거절했으므로 R2 구독이나 유료 플랜은 추가하지 않았습니다. Pages 프로젝트는 `seoul-rent-api`입니다. Production의 `SEOUL_API_KEY`는 암호화 Secret으로 등록했습니다. 사용자 동의를 받은 25개 구 집계 50개 객체를 비공개 KV에 업로드하고 Production 배포를 완료했습니다. 공개 API와 실제 브라우저에서 지도·Plotly 그래프·자치구/동/유형 필터·두 지역 비교·소표본 평균 숨김을 검증했습니다. 검토 결과는 [DEPLOYMENT_REVIEW.md](docs/DEPLOYMENT_REVIEW.md)에 기록합니다.
+
+전체 테스트 70개와 키 없는 Functions 컴파일·정적 자산 29개 빌드를 통과했습니다. 첫 서울 전체 API 실측은 약 26.4초였고 이후 자치구 비교는 약 0.75초, 단일 구 조회는 약 0.08초였습니다. 초기 조회 시간은 지역과 캐시 상태에 따라 달라질 수 있습니다. 자료와 무료 한도는 위 기준이며 서비스 무제한 사용을 의미하지 않습니다.
 
 운영 Function은 `RENT_SNAPSHOTS` KV에서 완료된 집계를 읽고 기존 날짜·필드·소표본 검증과 요약 투영을 적용합니다. 원본 CSV·개별 주소·API 키는 KV와 정적 자산에 포함하지 않습니다. KV는 R2의 ETag 조건부 갱신을 제공하는 수집 저장소로 사용하지 않으므로 원격 수집 API는 비활성화됩니다. 자료 갱신은 기존 로컬 Function으로 수집·검증한 집계를 운영 KV로 옮기는 방식입니다. 최초 배포 자료의 기간은 2022-01-01~2026-10-16입니다.
 
@@ -206,7 +208,7 @@ R2 Object Storage에서 **공개 접근이 꺼진** 다음 두 버킷을 준비�
 | Production | `RENT_DATA` | `seoul-rent-api-data` |
 | Preview | `RENT_DATA` | `seoul-rent-api-preview-data` |
 
-`wrangler.jsonc`의 기본 `r2_buckets`는 로컬·Production, `env.preview.r2_buckets`는 Preview에 적용합니다. 설정 파일이 [구성의 기준](https://developers.cloudflare.com/pages/functions/wrangler-configuration/)이므로 대시보드 Bindings에서 이름·환경을 확인하고, 변경은 파일에서 합니다. 두 환경은 저장 공간과 Secrets가 독립적입니다.
+현재 `wrangler.jsonc`의 기본 `r2_buckets`는 로컬 에뮬레이터용이며, `env.production`과 `env.preview`에서는 R2를 빈 배열로 덮어쓰고 KV만 연결합니다. R2 전환을 별도로 승인한 경우 위 버킷을 만들고 해당 환경의 `r2_buckets`에 `RENT_DATA` 바인딩을 명시해야 합니다. 설정 파일이 [구성의 기준](https://developers.cloudflare.com/pages/functions/wrangler-configuration/)이므로 변경은 파일에서 합니다. 두 환경의 저장 공간과 Secrets는 독립적입니다.
 
 **로컬에서 수집한 `.wrangler` R2와 `.generated`는 Git push나 Pages 배포로 운영 R2에 복사되지 않습니다.** 원본 CSV도 Git에 넣지 않습니다. 따라서 코드 배포만으로 차트 자료까지 준비되는 것은 아닙니다. 승인 후 런타임 Secret·R2 바인딩을 적용하고 로컬의 원본 CSV로 `npm.cmd run prepare:data`를 실행한 다음, HTTPS 원격 관리 API에 `npm.cmd run sync`로 자료를 준비해야 합니다. 먼저 한 구로 점검하고 전체25개 구를 완료합니다. 동일한 완료본은 재실행 때 재수집하지 않으며 현재 cutoff와 다르면 준비·재수집이 필요합니다.
 

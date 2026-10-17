@@ -4,19 +4,21 @@
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-09-30",
   "send_metrics": false,
-  // No vars, build substitutions or credentials belong here.
+  // Only the public prepared-data version belongs in vars; never credentials.
   // Local emulation needs no Cloudflare account. Provision this private bucket before deployment.
   "r2_buckets": [
     { "binding": "RENT_DATA", "bucket_name": "seoul-rent-api-data" }
   ],
   "env": {
     "production": {
+      "vars": { "RENT_QUERY_VERSION": "prepared-20261016-v1" },
       "r2_buckets": [],
       "kv_namespaces": [
         { "binding": "RENT_SNAPSHOTS", "id": "645ae59e83ac402e947049a739f13678" }
       ]
     },
     "preview": {
+      "vars": { "RENT_QUERY_VERSION": "prepared-20261016-v1" },
       "r2_buckets": [],
       "kv_namespaces": [
         { "binding": "RENT_SNAPSHOTS", "id": "9fcabf8d65294e9e96598fc7c9d664cc" }

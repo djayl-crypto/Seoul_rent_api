@@ -11,6 +11,7 @@
     "dev:keyless": "node scripts/dev.mjs --keyless",
     "test": "node --test",
     "prepare:data": "node scripts/prepare-data.mjs",
+    "prepare:queries": "node scripts/prepare-queries.mjs",
     "prepare:map": "node scripts/prepare-map.mjs",
     "sync": "node scripts/sync.mjs",
     "build": "node scripts/build.mjs",

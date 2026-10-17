@@ -2,6 +2,9 @@ import { HOUSING_TYPES, ANALYSIS_YEARS, RECEIPT_YEARS, ARCHIVE_YEARS, isDistrict
 import { validDate, validName, comparisonEnd } from '../analysis.js';
 import { ServiceError } from './http.js';
 
+export const SOURCE_POLICY = '2022 계약은 2022 파일 우선, 2023 파일의 2022 계약 제외, 접수연도 2024~2026은 API 추가';
+export const COVERAGE_NOTE = '자료는 제공된 파일과 최근 3개 접수연도의 API 범위입니다. 신고 지연·정정 및 파일 추출 시점 차이로 전체 계약을 보장하지 않습니다.';
+
 export function parseQuery(url) {
   const parameters = new URL(url).searchParams;
   if ([...parameters.keys()].some(key => !['gu', 'dong', 'type', 'comparison', 'view'].includes(key) || parameters.getAll(key).length !== 1)) throw new ServiceError('INVALID_QUERY', 400);
@@ -102,7 +105,10 @@ export function monthlySeries(snapshot, dong) {
 }
 
 export async function readSummary(env, query) {
-  const { snapshot, groups, monthly } = await readSnapshot(env, query.district);
+  return summarizeSnapshot(await readSnapshot(env, query.district), query);
+}
+
+export function summarizeSnapshot({ snapshot, groups, monthly }, query) {
   const dong = query.dong ?? 'all';
   const filter = group => (query.type === 'all' || group.housingType === query.type) && (dong === 'all' || group.dongCode === dong);
   const dongs = [...new Map([...groups, ...monthly].map(group => [group.dongCode, { code: group.dongCode, name: group.dongName }])).values()].sort((a, b) => a.name.localeCompare(b.name, 'ko') || a.code.localeCompare(b.code));
@@ -131,8 +137,8 @@ export async function readSummary(env, query) {
       archiveFileYears: ARCHIVE_YEARS, apiReceiptYears: RECEIPT_YEARS, comparison: 'samePeriod', monthlyComparison: 'fullAvailablePeriod',
       sourceRows: snapshot.sourceRows, sourceCalls: snapshot.sourceCalls, excludedCounts: exclusions,
       collectionFinishedAt: typeof snapshot.collectionFinishedAt === 'string' && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(snapshot.collectionFinishedAt) ? snapshot.collectionFinishedAt : null,
-      sourcePolicy: '2022 계약은 2022 파일 우선, 2023 파일의 2022 계약 제외, 접수연도 2024~2026은 API 추가',
-      coverageNote: '자료는 제공된 파일과 최근 3개 접수연도의 API 범위입니다. 신고 지연·정정 및 파일 추출 시점 차이로 전체 계약을 보장하지 않습니다.',
+      sourcePolicy: SOURCE_POLICY,
+      coverageNote: COVERAGE_NOTE,
     },
     dongs,
     overview: rollup(selectedMonthly, snapshot.analysisStart, snapshot.analysisEnd),

@@ -4,6 +4,8 @@
 
 이 문서는 최초 업로드 전 검토 기록이다. 후속 요청으로 GitHub 커밋·push가 승인되었고, 사용자 환경의 기존 `gh` CLI도 `djayl-crypto` 계정으로 인증됨을 확인했다. 아래 커밋 수·원격 미실행 상태는 최초 준비 완료 시점의 기록이며, Cloudflare 배포·원격 수집 보류는 계속 유효하다.
 
+추가 후속 상태(2026-10-17): 사용자가 공개 전환과 Pages 배포를 승인했다. GitHub 공개 전환 완료, Pages 프로젝트 `seoul-rent-api` 생성 완료. 계정의 R2 비활성화(오류 `10042`)와 Production `SEOUL_API_KEY` Secret 미등록으로 실제 배포와 운영 자료 업로드는 아직 실행하지 않았다. 로컬 완료 자료 25개 구·50개 객체(전세 1,594,642건)를 내보내 재검증했으며, 비밀값은 읽거나 출력하지 않았다. 아래 내용은 최초 준비 기록으로 보존한다.
+
 ## 외부 작업 상태
 
 - 로컬 Git `main`과 origin URL `https://github.com/djayl-crypto/Seoul_rent_api.git`만 준비했다.

@@ -111,13 +111,17 @@ R2 체크포인트는 조건부 갱신으로 동시 단계의 중복 합산을 �
 
 ## GitHub 업로드와 Cloudflare Pages 배포 준비
 
-**2026-10-17 후속 요청으로 GitHub 저장소를 공개 전환했고 Cloudflare Pages 배포도 승인되었습니다.** Pages 프로젝트 `seoul-rent-api`를 생성했으며, 현재 계정의 R2 비활성화(API 오류 `10042`)와 Production의 `SEOUL_API_KEY` Secret 미등록으로 운영 설정을 기다리고 있습니다. 아직 사이트 파일을 배포하거나 운영 자료를 업로드하지 않았습니다. Pages에 할당된 도메인은 `seoul-rent-api-b4y.pages.dev`이며 현재는 배포 완료 주소가 아닙니다. 검토 결과는 [DEPLOYMENT_REVIEW.md](docs/DEPLOYMENT_REVIEW.md)에 기록합니다.
+**GitHub 저장소는 공개이며 Pages 운영 저장소는 무료 Workers KV를 사용합니다.** 사용자가 R2 구독을 거절했으므로 R2 구독이나 유료 플랜은 추가하지 않았습니다. Pages 프로젝트는 `seoul-rent-api`, 할당된 도메인은 `seoul-rent-api-b4y.pages.dev`입니다. Production의 `SEOUL_API_KEY`는 암호화 Secret으로 등록했습니다. 사용자 동의를 받은 25개 구 집계 50개 객체를 비공개 KV에 업로드했으며, 실제 사이트 배포와 공개 동작 검증을 진행합니다. 검토 결과는 [DEPLOYMENT_REVIEW.md](docs/DEPLOYMENT_REVIEW.md)에 기록합니다.
+
+운영 Function은 `RENT_SNAPSHOTS` KV에서 완료된 집계를 읽고 기존 날짜·필드·소표본 검증과 요약 투영을 적용합니다. 원본 CSV·개별 주소·API 키는 KV와 정적 자산에 포함하지 않습니다. KV는 R2의 ETag 조건부 갱신을 제공하는 수집 저장소로 사용하지 않으므로 원격 수집 API는 비활성화됩니다. 자료 갱신은 기존 로컬 Function으로 수집·검증한 집계를 운영 KV로 옮기는 방식입니다. 최초 배포 자료의 기간은 2022-01-01~2026-10-16입니다.
+
+무료 Workers KV는 저장 1GB, 읽기 하루 100,000회, 쓰기 하루 1,000회까지이며 초과 시 해당 작업이 거절됩니다. 현재 집계는 약 28.6MB·50개 객체입니다. Production과 Preview는 서로 다른 KV namespace를 사용합니다. 식별자는 공개 바인딩 정보이며 인증키가 아닙니다. [공식 무료 한도](https://developers.cloudflare.com/kv/platform/pricing/)를 따릅니다.
 
 이 프로젝트는 Wrangler 직접 배포 방식으로 생성했습니다. GitHub push가 자동 Pages 배포를 실행하지 않습니다. 아래 Git 연동 절차는 별도의 Git 연동 프로젝트를 만들 때 사용하는 절차입니다. 직접 배포에서도 루트 `functions/`와 `dist/`를 함께 배포하고, 로컬 환경파일을 제외한 키 없는 배포 환경을 사용합니다.
 
-R2 활성화와 Secret 등록은 [Cloudflare 대시보드](https://dash.cloudflare.com/)에서 진행합니다. R2 Object Storage를 활성화한 다음 Workers & Pages → `seoul-rent-api` → Settings → Variables and Secrets → Production에 `SEOUL_API_KEY`를 **Encrypt**로 등록합니다. 값은 채팅·Git·빌드 변수에 넣지 않습니다. [R2 시작 안내](https://developers.cloudflare.com/r2/get-started/)와 [공식 Secret 등록 절차](https://developers.cloudflare.com/pages/functions/bindings/#secrets)를 따릅니다.
+Secret을 변경할 때는 [Cloudflare 대시보드](https://dash.cloudflare.com/)의 Workers & Pages → `seoul-rent-api` → Settings → Variables and Secrets → Production에 `SEOUL_API_KEY`를 **Encrypt**로 등록하고 다시 배포합니다. 값은 채팅·Git·빌드 변수에 넣지 않습니다. [공식 Secret 등록 절차](https://developers.cloudflare.com/pages/functions/bindings/#secrets)를 따릅니다.
 
-기존 로컬의 완료 집계는 `.check-output/deploy-data/`에 25개 구·50개 객체로 내보내고 서버 요약 함수로 재검증했습니다(2022-01-01~2026-10-16, 전세 1,594,642건). 이 임시 자료는 Git·정적 빌드에서 제외합니다. R2 활성화 후에는 원본 CSV나 API 키를 전송하지 않고 이 검증된 집계와 완료 포인터만 비공개 운영 R2로 옮길 수 있습니다. 초기 자료 이전에는 서울 API 재수집이 필요하지 않습니다.
+기존 로컬의 완료 집계는 `.check-output/deploy-data/`에 25개 구·50개 객체로 내보내고 서버 요약 함수로 재검증했습니다(2022-01-01~2026-10-16, 전세 1,594,642건). 이 임시 자료는 Git·정적 빌드에서 제외합니다. 원본 CSV나 API 키를 전송하지 않고 검증된 집계와 완료 포인터만 비공개 운영 KV로 옮깁니다. 초기 자료 이전에는 서울 API 재수집이 필요하지 않습니다.
 
 ### 저장소와 최초 업로드 검사
 
@@ -191,7 +195,9 @@ git push -u origin main
 - `LOCAL_ADMIN`은 Production과 Preview 어디에도 등록하지 않습니다. 로컬 실행기가 127.0.0.1에만 주입하는 값입니다.
 - CARTO 키는 사용하지 않으므로 등록할 필요가 없습니다. 공개 조회는 완료된 R2 요약을 읽고, 서울 키는 관리자 수집의 Function 내부에서만 사용합니다.
 
-### R2와 운영 데이터 준비
+### 선택 사항: R2 기반 원격 수집으로 전환할 때
+
+현재 무료 KV 배포에는 아래 R2 설정을 적용하지 않습니다. R2 사용과 그 구독을 별도로 승인한 경우에만 사용하는 기존 수집 아키텍처 안내입니다. 로컬 에뮬레이터는 구독 없이 기본 R2 설정을 계속 사용합니다.
 
 R2 Object Storage에서 **공개 접근이 꺼진** 다음 두 버킷을 준비합니다. 생성과 원격 전송은 이 문서의 로컬 준비 단계에서 실행하지 않았습니다.
 

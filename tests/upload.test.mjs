@@ -88,3 +88,21 @@ test('literal credentials and source URLs are detected while synthetic fixtures 
   assert.deepEqual(scanText("SEOUL_API_KEY: 'synthetic-test-key'\n"+JSON.stringify('a'.repeat(64)),'tests/fixture.mjs','working'),[]);
   assert.ok(scanText('SEOUL_API_KEY=nonempty-example','.env.example','working').length);
 });
+
+test('documented KV namespace identifiers are public metadata only in the binding configuration',()=>{
+  const id=['0123456789abcdef','0123456789abcdef'].join('');
+  const binding=JSON.stringify({kv_namespaces:[{binding:'RENT_SNAPSHOTS',id}]});
+  assert.deepEqual(scanText(binding,'wrangler.jsonc','working'),[]);
+  assert.ok(scanText(binding,'README.md','working').length);
+  assert.ok(scanText(`SEOUL_API_KEY = '${id}'`,'wrangler.jsonc','working').length);
+});
+
+test('KV identifiers in comments or other fields never exempt a matching suspicious literal',()=>{
+  const id=['0123456789abcdef','0123456789abcdef'].join('');
+  const comment=`// "binding":"RENT_SNAPSHOTS","id":"${id}"\n`;
+  assert.ok(scanText(comment+JSON.stringify({CUSTOM_TOKEN:id}),'wrangler.jsonc','working').some(f=>f.rule==='suspicious-literal'));
+  const actualBinding={kv_namespaces:[{binding:'RENT_SNAPSHOTS',id}],CUSTOM_TOKEN:id};
+  assert.ok(scanText(JSON.stringify(actualBinding),'wrangler.jsonc','working').some(f=>f.rule==='suspicious-literal'));
+  const wrongPath={vars:{binding:'RENT_SNAPSHOTS',id}};
+  assert.ok(scanText(JSON.stringify(wrongPath),'wrangler.jsonc','working').some(f=>f.rule==='suspicious-literal'));
+});

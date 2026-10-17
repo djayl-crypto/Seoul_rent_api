@@ -19,6 +19,7 @@
     "check:upload": "node scripts/check-upload.mjs"
   },
   "devDependencies": {
+    "jsonc-parser": "3.3.1",
     "proj4": "2.22.0",
     "shapefile": "0.6.6",
     "wrangler": "4.140.0"

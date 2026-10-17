@@ -10,9 +10,16 @@
     { "binding": "RENT_DATA", "bucket_name": "seoul-rent-api-data" }
   ],
   "env": {
+    "production": {
+      "r2_buckets": [],
+      "kv_namespaces": [
+        { "binding": "RENT_SNAPSHOTS", "id": "645ae59e83ac402e947049a739f13678" }
+      ]
+    },
     "preview": {
-      "r2_buckets": [
-        { "binding": "RENT_DATA", "bucket_name": "seoul-rent-api-preview-data" }
+      "r2_buckets": [],
+      "kv_namespaces": [
+        { "binding": "RENT_SNAPSHOTS", "id": "9fcabf8d65294e9e96598fc7c9d664cc" }
       ]
     }
   }

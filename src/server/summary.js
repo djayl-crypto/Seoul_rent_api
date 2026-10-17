@@ -59,12 +59,17 @@ function publicGroup(group, district, snapshot, kind = 'annual') {
   };
 }
 export async function readSnapshot(env, district) {
-  if (!env.RENT_DATA) throw notReady();
-  const pointer = await env.RENT_DATA.get(`districts/${district}/latest.json`);
+  // KV is a read-only deployment store. Do not expose it as the mutable R2 binding.
+  const storage = env.RENT_DATA ?? (env.RENT_SNAPSHOTS ? { get: async key => {
+    const value = await env.RENT_SNAPSHOTS.get(key);
+    return value === null ? null : { json: async () => JSON.parse(value) };
+  } } : null);
+  if (!storage) throw notReady();
+  const pointer = await storage.get(`districts/${district}/latest.json`);
   if (!pointer) throw notReady();
   const manifest = await pointer.json();
   if (manifest.schemaVersion !== 2 || manifest.status !== 'complete' || !/^[a-zA-Z0-9_-]{1,80}$/.test(manifest.snapshotId ?? '')) throw notReady();
-  const object = await env.RENT_DATA.get(`snapshots/${manifest.snapshotId}/${district}.json`);
+  const object = await storage.get(`snapshots/${manifest.snapshotId}/${district}.json`);
   if (!object) throw notReady();
   const snapshot = await object.json();
   if (snapshot.schemaVersion !== 2 || snapshot.status !== 'complete' || snapshot.snapshotId !== manifest.snapshotId || snapshot.analysisStart !== '2022-01-01' || !validDate(snapshot.analysisEnd) || snapshot.analysisEnd > '2026-12-31' || snapshot.analysisStart > snapshot.analysisEnd || !integer(snapshot.sourceRows) || !integer(snapshot.sourceCalls) || !Array.isArray(snapshot.groups) || !Array.isArray(snapshot.monthly) || !Array.isArray(snapshot.yearly)) throw notReady();

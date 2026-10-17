@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFile, lstat, realpath } from 'node:fs/promises';
 import { resolve, dirname, relative, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseTree, findNodeAtLocation } from 'jsonc-parser';
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const roots=new Set(['.gitignore','.env.example','.node-version','README.md','package.json','package-lock.json','wrangler.jsonc']);
@@ -17,6 +18,19 @@ function entropy(value) {const counts=new Map();for(const c of value)counts.set(
 // Diagnostics contain only a path, line number, rule and snapshot kind. Never a match or snippet.
 export function scanText(text,path,source) {
   const findings=[];
+  // Exempt only the actual public ID token at a supported JSONC binding path.
+  const namespaceOffsets=new Set();
+  if(path==='wrangler.jsonc') {
+    const errors=[],tree=parseTree(text,errors,{allowTrailingComma:true});
+    if(errors.length===0&&tree)for(const location of [['kv_namespaces'],['env','production','kv_namespaces'],['env','preview','kv_namespaces']]) {
+      const list=findNodeAtLocation(tree,location);
+      if(list?.type!=='array')continue;
+      for(const item of list.children??[]) {
+        const binding=findNodeAtLocation(item,['binding']),id=findNodeAtLocation(item,['id']);
+        if(binding?.value==='RENT_SNAPSHOTS'&&id?.type==='string'&&/^[a-f0-9]{32}$/.test(id.value))namespaceOffsets.add(id.offset);
+      }
+    }
+  }
   const add=(rule,index)=>findings.push({path,source,rule,line:text.slice(0,index).split('\n').length});
   if(path==='.env.example') {
     let index=0;
@@ -40,7 +54,7 @@ export function scanText(text,path,source) {
   }
   for(const match of text.matchAll(/["']([A-Za-z0-9]{28,64})["']/g)) {
     const value=match[1];
-    if(!/^[a-f0-9]{64}$/i.test(value)&&!safeValue(value)&&entropy(value)>3.6)add('suspicious-literal',match.index);
+    if(!/^[a-f0-9]{64}$/i.test(value)&&!namespaceOffsets.has(match.index)&&!safeValue(value)&&entropy(value)>3.6)add('suspicious-literal',match.index);
   }
   return findings;
 }

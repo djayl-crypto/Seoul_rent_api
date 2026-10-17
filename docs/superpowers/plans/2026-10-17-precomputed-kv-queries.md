@@ -51,8 +51,8 @@
 
 - [x] Configure the immutable non-secret dataset version for Production/Preview and document the new read path, preparation, limits and local detailed mode.
 - [x] Complete test suite, build, Functions compilation, upload audit and independent whole-change review; fix material findings with regression tests.
-- [ ] Upload all validated query bundles into the approved production KV, then deploy the reviewed code using existing auth without reading `.env`; retain old keys for rollback.
-- [ ] Verify repeated production city/comparison requests and dong/type selections, then commit/push the reviewed change and record measured results.
+- [x] Upload all validated query bundles into the approved production KV, then deploy the reviewed code using existing auth without reading `.env`; retain old keys for rollback.
+- [x] Verify repeated production city/comparison requests and dong/type selections, then commit/push the reviewed change and record measured results.
 
 ## Execution record
 
@@ -63,3 +63,6 @@
 - Real dataset: 429 regional bundles, 430 objects total, 2,145 verified selections, 35,775,705 bytes, max region 91,311 bytes, comparison 37,094 bytes, transaction count 1,594,642. Repeated generation produced the same SHA-256.
 - Whole-change reviewer: no unresolved findings. Fixed malformed nested values returning 500 instead of safe 503, and derived yearly changes only after both years meet the 30-transaction minimum; regression tests observed RED then GREEN.
 - Production KV upload: 430 validated query objects successfully written into the existing approved namespace. Old keys preserved; no R2 subscription, paid plan or source recollection.
+- Production deployment: `2654f350`, code commit `8bbc1e7`, immutable version `prepared-20261016-v1`. All 455 production checks passed: 429 regional dashboards, 5 comparison selections, 20 repeated city/comparison queries, one expected invalid-query 400. Zero resource-limit errors.
+- Measured milliseconds: regional median 352, p95 594, max 12,204; repeated city median 36/max45; repeated comparison median30/max83. These include KV/network wait at one test location and are not CPU-budget guarantees.
+- Browser verified: initial city map/Plotly charts, district and dong/type selection, two-region comparison and correct suppression for 청운동 apartments (8 transactions). Restored the default city view.
